@@ -208,6 +208,8 @@ export const DialogueVideo = () => {
   const getBgProgress = (index: number) => {
     const segment = metadata.segments[index];
     if (!segment) return 0;
+    // 第一张图片直接显示，不做淡入
+    if (index === 0) return 1;
     const startFrame = segment.start_time * fps;
     const timeSinceStart = frame - startFrame;
     return Math.min(Math.max(timeSinceStart / FADE_DURATION, 0), 1);
@@ -226,7 +228,8 @@ export const DialogueVideo = () => {
     if (frame < startFrame) {
       return 0;
     } else if (frame < segmentStartFadeEnd) {
-      // 淡入阶段
+      // 淡入阶段 - 第一张图片直接显示
+      if (index === 0) return 1;
       const progress = (frame - startFrame) / FADE_DURATION;
       return easeInOutQuad(progress);
     } else if (frame < segmentEndFadeStart) {
