@@ -1,54 +1,65 @@
-# Remotion video
+# Remotion Video Project
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+## 项目结构
 
-Welcome to your Remotion project!
+```
+src/
+├── assets/              # 素材资源目录
+│   ├── images/          # 图片素材
+│   │   └── *.jpg/png/webp
+│   ├── audio/           # 音频素材
+│   │   └── *.wav/mp3
+│   └── final_audio.wav  # 视频主音频
+├── components/          # 组件
+├── Composition.tsx      # 图片轮播组件
+├── DialogueVideo.tsx    # 对话视频组件
+├── Root.tsx             # 入口配置
+├── index.tsx
+└── vite-env.d.ts        # 类型声明
+```
+
+## 开发规范
+
+### 素材存放
+
+- **图片**: 放在 `src/assets/images/` 目录
+- **音频**: 放在 `src/assets/` 目录
+- 外部素材可通过软链接引入，或复制到 assets 目录
+
+### 资源加载
+
+```tsx
+// 图片：使用 require.context
+const imagesContext = require.context(
+  "./assets/images",
+  false,
+  /\.(jpg|jpeg|png|webp)$/
+);
+const imageList = imagesContext.keys().map((key) => imagesContext(key));
+
+// 音频：使用 require
+<Audio src={require("./assets/audio.wav")} volume={1} />
+```
+
+### 组件命名
+
+- 对话视频组件: `DialogueVideo.tsx`
+- 图片轮播组件: `Composition.tsx`
+- 组合配置: `Root.tsx`
 
 ## Commands
 
-**Install Dependencies**
-
-```console
+```bash
+# 安装依赖
 npm i
-```
 
-**Start Preview**
-
-```console
+# 启动预览
 npm run dev
-```
 
-**Render video**
+# 渲染视频
+npx remotion render src/index.tsx DialogueVideo output.mp4
+npx remotion render src/index.tsx MyComp output.mp4
 
-```console
-npx remotion render
-```
-
-**Upgrade Remotion**
-
-```console
+# 升级 Remotion
 npx remotion upgrade
 ```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
