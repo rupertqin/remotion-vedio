@@ -1,6 +1,7 @@
 import { AbsoluteFill, useVideoConfig } from "remotion";
 import { useCurrentFrame } from "remotion";
 import { useMemo } from "react";
+import metadata from "./assets/metadata.json";
 
 // webpack 的 require.context 加载本地图片
 const imagesContext = require.context(
@@ -21,25 +22,20 @@ const TRANSITIONS: TransitionType[] = [
 ];
 
 export const MyComposition = () => {
-  const { durationInFrames } = useVideoConfig();
-
-  // 每张图片5秒 = 150帧 (30fps)
-  const FRAMES_PER_IMAGE = 150;
+  const { fps, durationInFrames } = useVideoConfig();
 
   const imageList = useMemo(() => {
     const all = imagesContext.keys().map((key: string) => imagesContext(key));
-    // 只取前6张（30秒 / 5秒 = 6张）
-    return all.slice(0, 6);
+    // 只取和字幕段数相同数量的图片
+    return all.slice(0, metadata.segments.length);
   }, []);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "black" }}>
       {imageList.map((src, index) => {
-        const startFrame = index * FRAMES_PER_IMAGE;
-        const endFrame = Math.min(
-          (index + 1) * FRAMES_PER_IMAGE,
-          durationInFrames
-        );
+        const segment = metadata.segments[index];
+        const startFrame = segment.start_time * fps;
+        const endFrame = segment.end_time * fps;
         const transitionType = TRANSITIONS[index % TRANSITIONS.length];
 
         return (
@@ -84,23 +80,19 @@ const ImageTransition = ({
   const localFrame = frame - startFrame;
   const imageDuration = endFrame - startFrame;
 
-  // 动画参数：进入60帧(2秒)，停留30帧(1秒)，退出60帧(2秒)
-  const enterDuration = 60;
-  const stayDuration = 30;
-  const exitDuration = 60;
-  const totalTransition = enterDuration + stayDuration + exitDuration;
+  // 动画参数：进入20%，停留60%，退出20%
+  const enterDuration = Math.floor(imageDuration * 0.2);
+  const stayDuration = Math.floor(imageDuration * 0.6);
+  const exitDuration = Math.floor(imageDuration * 0.2);
 
   // 计算样式
   const getStyle = () => {
     if (localFrame < enterDuration) {
-      // 进入阶段
       const progress = localFrame / enterDuration;
       return getEnterStyle(progress, transitionType);
     } else if (localFrame < enterDuration + stayDuration) {
-      // 停留阶段 - 完全显示
       return getStayStyle(transitionType);
     } else {
-      // 退出阶段
       const exitProgress = (localFrame - enterDuration - stayDuration) / exitDuration;
       return getExitStyle(exitProgress, transitionType);
     }
@@ -138,7 +130,7 @@ const getEnterStyle = (progress: number, type: TransitionType) => {
   }
 };
 
-// 停留动画 - 轻微呼吸效果
+// 停留动画
 const getStayStyle = (type: TransitionType) => {
   switch (type) {
     case "zoom":
@@ -169,8 +161,5 @@ const getExitStyle = (progress: number, type: TransitionType) => {
   }
 };
 
-// 缓动函数 - 进入用 easeOutQuart (快速开始，缓慢结束)
 const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
-
-// 缓动函数 - 退出用 easeInQuart (缓慢开始，快速结束)
 const easeInQuart = (t: number) => t * t * t * t;
