@@ -11,60 +11,67 @@ const imagesContext = require.context(
   /\.(jpg|jpeg|png|webp)$/,
 );
 
-interface Segment {
-  index: number;
-  voice: string;
-  text: string;
-  start_time: number;
-  end_time: number;
-  duration: number;
-  audio_file: string;
-}
-
-interface Metadata {
-  source_file: string;
-  output_audio: string;
-  total_duration: number;
-  segment_count: number;
-  created_at: string;
-  model: string;
-  segments: Segment[];
-}
-
 // 说话者配置
 const SPEAKERS: Record<string, { name: string; color: string }> = {
   "vivian.surprise": { name: "Vivian", color: "#ffffff" },
   "man.surprise": { name: "Mr. Zhang", color: "#ffffff" },
 };
 
-// 图片背景组件
-const ImageBackground = ({
-  imageIndex,
-  frame,
-}: {
-  imageIndex: number;
-  frame: number;
-}) => {
-  const imageList = useMemo(() => {
-    return imagesContext.keys().map((key: string) => imagesContext(key));
-  }, []);
+// 声波组件
+const AudioWaveform = ({ active }: { active: boolean }) => {
+  const bars = 20;
 
-  const currentImage = imageList[imageIndex % imageList.length];
-
-  // 轻微的缩放动画
-  const scale = 1 + Math.sin(frame * 0.01) * 0.02;
+  if (!active) return null;
 
   return (
     <div
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: "hidden",
+        bottom: 120,
+        left: "50%",
+        transform: "translateX(-50%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+        height: 40,
       }}
     >
+      {[...Array(bars)].map((_, i) => (
+        <WaveBar key={i} index={i} />
+      ))}
+    </div>
+  );
+};
+
+const WaveBar = ({ index }: { index: number }) => {
+  const frame = useCurrentFrame();
+  const speed = 0.3 + (index % 5) * 0.1;
+  const height = 5 + Math.sin(frame * speed + index * 0.5) * 8 + Math.abs(Math.sin(frame * 0.1 + index * 0.3)) * 5;
+
+  return (
+    <div
+      style={{
+        width: 4,
+        height: height,
+        background: "rgba(255,255,255,0.6)",
+        borderRadius: 2,
+      }}
+    />
+  );
+};
+
+// 图片背景组件
+const ImageBackground = ({ imageIndex, frame }: { imageIndex: number; frame: number }) => {
+  const imageList = useMemo(() => {
+    return imagesContext.keys().map((key: string) => imagesContext(key));
+  }, []);
+
+  const currentImage = imageList[imageIndex % imageList.length];
+  const scale = 1 + Math.sin(frame * 0.01) * 0.02;
+
+  return (
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden" }}>
       <img
         src={currentImage}
         style={{
@@ -74,7 +81,6 @@ const ImageBackground = ({
           transform: `scale(${scale})`,
         }}
       />
-      {/* 遮罩层 */}
       <div
         style={{
           position: "absolute",
@@ -126,6 +132,21 @@ export const DialogueVideo = () => {
           padding: 60,
         }}
       >
+        {/* 说话者标签 */}
+        <div
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            color: speakerConfig.color,
+            marginBottom: 40,
+            padding: "10px 30px",
+            background: "rgba(0,0,0,0.5)",
+            borderRadius: 30,
+          }}
+        >
+          {speakerConfig.name}
+        </div>
+
         {/* 对话内容 */}
         <div
           style={{
@@ -140,6 +161,9 @@ export const DialogueVideo = () => {
         >
           {currentSegment?.text || ""}
         </div>
+
+        {/* 声波效果 */}
+        <AudioWaveform active={!!currentSegment} />
       </div>
     </AbsoluteFill>
   );
