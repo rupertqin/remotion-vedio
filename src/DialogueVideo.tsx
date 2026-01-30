@@ -2,7 +2,6 @@ import { AbsoluteFill, useVideoConfig, Audio } from "remotion";
 import { useCurrentFrame } from "remotion";
 import audioFile from "./assets/final_audio.wav";
 import metadata from "./assets/metadata.json";
-import coverImage from "./assets/cover.jpg";
 
 // 加载图片
 const imagesContext = require.context(
@@ -104,8 +103,8 @@ const ScrollingSubtitle = ({
   const totalChars = charsPerLine.reduce((a, b) => a + b, 0);
 
   // 计算每行的时间：当前行时长 = (字数/总字数) * segment总时长
-  const lineDurations = charsPerLine.map(
-    (chars) => Math.max((chars / totalChars) * duration, 1)
+  const lineDurations = charsPerLine.map((chars) =>
+    Math.max((chars / totalChars) * duration, 1),
   );
 
   // 预计算每行的起始帧
@@ -154,15 +153,15 @@ const ScrollingSubtitle = ({
       ? nextLineElapsed < fadeFrames
         ? nextLineElapsed / fadeFrames
         : 1
-      : Math.max(
-          0,
-          1 - (nextLineElapsed - nextFadeOutStart) / fadeFrames
-        );
+      : Math.max(0, 1 - (nextLineElapsed - nextFadeOutStart) / fadeFrames);
 
   return (
     <div
       style={{
-        position: "relative",
+        position: "absolute",
+        bottom: "20%",
+        left: "50%",
+        transform: "translateX(-50%)",
         width: "100%",
         height: 60,
         display: "flex",
@@ -221,7 +220,7 @@ const AudioWaveform = ({ active }: { active: boolean }) => {
     <div
       style={{
         position: "absolute",
-        bottom: 120,
+        top: 80,
         left: "50%",
         transform: "translateX(-50%)",
         display: "flex",
@@ -353,28 +352,16 @@ const ContentLayer = ({
         bottom: 0,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        justifyContent: "space-between",
         alignItems: "center",
-        padding: 60,
+        padding: "80px 60px 120px",
         opacity,
       }}
     >
-      {/* 说话者标签 */}
-      <div
-        style={{
-          fontSize: 24,
-          fontWeight: "bold",
-          color: speakerConfig.color,
-          marginBottom: 40,
-          padding: "10px 30px",
-          background: "rgba(0,0,0,0.5)",
-          borderRadius: 30,
-        }}
-      >
-        {speakerConfig.name}
-      </div>
+      {/* 声波效果 - 顶部 */}
+      <AudioWaveform active={!!segment} />
 
-      {/* 对话内容 - 逐行滚动显示 */}
+      {/* 对话内容 - 底部 */}
       <ScrollingSubtitle
         text={segment?.text || ""}
         duration={segment?.duration || 0}
@@ -382,9 +369,6 @@ const ContentLayer = ({
         startTime={segment?.start_time || 0}
         color={speakerConfig.color}
       />
-
-      {/* 声波效果 */}
-      <AudioWaveform active={!!segment} />
     </div>
   );
 };
@@ -461,29 +445,6 @@ export const DialogueVideo = () => {
 
       {/* 主音频 */}
       <Audio src={audioFile} volume={1} />
-
-      {/* Cover 图片 - 全屏背景 */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-10px",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.01)",
-          }}
-        />
-      </div>
 
       {/* 内容层 - 淡入淡出 */}
       <ContentLayer
