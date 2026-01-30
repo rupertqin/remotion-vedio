@@ -24,6 +24,193 @@ const FADE_DURATION = 15;
 const easeInOutQuad = (t: number) =>
   t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
+// 清理行尾标点
+const cleanLine = (line: string) => line.replace(/[。？！，；]$/, "").trim();
+
+// 按标点符号切割文本
+const splitTextByPunctuation = (text: string): string[] => {
+  if (!text) return [];
+  // 按句号、逗号、问号、感叹号、分号切割
+  const parts = text.split(/([。？！，；])/);
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+
+    if (part === "。" || part === "！" || part === "？") {
+      // 句末标点，直接分割
+      if (currentLine.trim()) lines.push(cleanLine(currentLine));
+      currentLine = "";
+    } else if (part === "，" || part === "；") {
+      // 句中标点，直接分割，不保留标点
+      if (currentLine.trim()) lines.push(cleanLine(currentLine));
+      currentLine = "";
+    } else {
+      // 普通文字，添加到当前行
+      currentLine += part;
+      // 如果当前行太长（超过25字），也要分割
+      if (currentLine.length > 25) {
+        const lastCommaIndex = currentLine.lastIndexOf("，");
+        const lastSemicolonIndex = currentLine.lastIndexOf("；");
+        const lastPunctuation = Math.max(lastCommaIndex, lastSemicolonIndex);
+
+        if (lastPunctuation > 10) {
+          // 在最后一个标点处分割
+          const part1 = currentLine.slice(0, lastPunctuation);
+          const part2 = currentLine.slice(lastPunctuation);
+          if (part1.trim()) lines.push(cleanLine(part1));
+          currentLine = part2;
+        } else {
+          // 没有标点，直接按字数分割
+          if (currentLine.trim()) lines.push(cleanLine(currentLine));
+          currentLine = "";
+        }
+      }
+    }
+  }
+
+  // 处理最后剩余的内容
+  if (currentLine.trim()) {
+    lines.push(cleanLine(currentLine));
+  }
+
+  return lines;
+};
+
+// 字幕逐行切换组件
+const ScrollingSubtitle = ({
+  text,
+  duration,
+  fps,
+  startTime,
+  color,
+}: {
+  text: string;
+  duration: number;
+  fps: number;
+  startTime: number;
+  color: string;
+}) => {
+  const frame = useCurrentFrame();
+  const lines = splitTextByPunctuation(text);
+  const lineCount = lines.length;
+
+  if (lineCount === 0) return null;
+
+  // 计算每行时间（根据字数分配，最少1秒）
+  const charsPerLine = lines.map((line) => line.length);
+  const totalChars = charsPerLine.reduce((a, b) => a + b, 0);
+
+  // 计算每行的时间：当前行时长 = (字数/总字数) * segment总时长
+  const lineDurations = charsPerLine.map(
+    (chars) => Math.max((chars / totalChars) * duration, 1)
+  );
+
+  // 预计算每行的起始帧
+  let accumulatedFrames = 0;
+  const lineStartFrames: number[] = [];
+  for (let i = 0; i < lineCount; i++) {
+    lineStartFrames.push(accumulatedFrames);
+    accumulatedFrames += lineDurations[i] * fps;
+  }
+
+  // 计算当前在 segment 中的位置
+  const segmentStartFrame = startTime * fps;
+  const elapsed = frame - segmentStartFrame;
+
+  // 找到当前行
+  let currentIndex = 0;
+  for (let i = 0; i < lineCount; i++) {
+    const lineEndFrame = lineStartFrames[i] + lineDurations[i] * fps;
+    if (elapsed < lineEndFrame) {
+      currentIndex = i;
+      break;
+    }
+    currentIndex = i;
+  }
+
+  const nextIndex = Math.min(currentIndex + 1, lineCount - 1);
+  const lineElapsed = elapsed - lineStartFrames[currentIndex];
+  const lineDurationFrames = lineDurations[currentIndex] * fps;
+
+  const fadeFrames = Math.floor(fps * 0.1); // 0.1秒快速淡入淡出
+  const fadeOutStart = lineDurationFrames * 0.85; // 前85%时间完全不透明
+
+  // 当前行透明度
+  const currentOpacity =
+    lineElapsed < fadeOutStart
+      ? 1
+      : Math.max(0, 1 - (lineElapsed - fadeOutStart) / fadeFrames);
+
+  // 下一行透明度（当前行结束后淡入）
+  const nextLineStartFrame = lineStartFrames[nextIndex];
+  const nextLineElapsed = elapsed - nextLineStartFrame;
+  const nextLineDurationFrames = lineDurations[nextIndex] * fps;
+  const nextFadeOutStart = nextLineDurationFrames * 0.85;
+  const nextOpacity =
+    nextLineElapsed < nextFadeOutStart
+      ? nextLineElapsed < fadeFrames
+        ? nextLineElapsed / fadeFrames
+        : 1
+      : Math.max(
+          0,
+          1 - (nextLineElapsed - nextFadeOutStart) / fadeFrames
+        );
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: 60,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      {/* 当前行 */}
+      <div
+        style={{
+          position: "absolute",
+          fontSize: 36,
+          color: color,
+          textAlign: "center",
+          lineHeight: 1.5,
+          fontWeight: "500",
+          textShadow: "2px 2px 10px rgba(0,0,0,0.5)",
+          opacity: currentOpacity,
+          transition: "opacity 0.03s",
+          padding: "0 20px",
+        }}
+      >
+        {lines[currentIndex]}
+      </div>
+
+      {/* 下一行（重叠在当前位置，淡进淡出） */}
+      {nextIndex !== currentIndex && (
+        <div
+          style={{
+            position: "absolute",
+            fontSize: 36,
+            color: color,
+            textAlign: "center",
+            lineHeight: 1.5,
+            fontWeight: "500",
+            textShadow: "2px 2px 10px rgba(0,0,0,0.5)",
+            opacity: nextOpacity,
+            transition: "opacity 0.03s",
+            padding: "0 20px",
+          }}
+        >
+          {lines[nextIndex]}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // 声波组件
 const AudioWaveform = ({ active }: { active: boolean }) => {
   const bars = 20;
@@ -137,7 +324,7 @@ const ImageBackground = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: "rgba(0,0,0,0.5)",
+          background: "rgba(0,0,0,0.2)",
         }}
       />
     </div>
@@ -154,6 +341,8 @@ const ContentLayer = ({
   speakerConfig: { name: string; color: string };
   opacity: number;
 }) => {
+  const { fps } = useVideoConfig();
+
   return (
     <div
       style={{
@@ -185,19 +374,14 @@ const ContentLayer = ({
         {speakerConfig.name}
       </div>
 
-      {/* 对话内容 */}
-      <div
-        style={{
-          fontSize: 36,
-          color: speakerConfig.color,
-          textAlign: "center",
-          lineHeight: 1.6,
-          fontWeight: "500",
-          textShadow: "2px 2px 10px rgba(0,0,0,0.5)",
-        }}
-      >
-        {segment?.text || ""}
-      </div>
+      {/* 对话内容 - 逐行滚动显示 */}
+      <ScrollingSubtitle
+        text={segment?.text || ""}
+        duration={segment?.duration || 0}
+        fps={fps}
+        startTime={segment?.start_time || 0}
+        color={speakerConfig.color}
+      />
 
       {/* 声波效果 */}
       <AudioWaveform active={!!segment} />
@@ -296,7 +480,7 @@ export const DialogueVideo = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(0,0,0,0.5)",
+            background: "rgba(0,0,0,0.01)",
           }}
         />
       </div>
