@@ -19,6 +19,9 @@ const SPEAKERS: Record<string, { name: string; color: string }> = {
 // 渐变时长 0.5秒 = 15帧
 const FADE_DURATION = 15;
 
+// 背景切换间隔 10 秒
+const BG_SWITCH_INTERVAL = 10;
+
 // 缓动函数
 const easeInOutQuad = (t: number) =>
   t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -178,7 +181,7 @@ const ScrollingSubtitle = ({
           textAlign: "center",
           lineHeight: 1.5,
           fontWeight: "500",
-          textShadow: "2px 2px 10px rgba(0,0,0,0.5)",
+          textShadow: "2px 2px 10px rgba(0,0,0,0.8)",
           opacity: currentOpacity,
           transition: "opacity 0.03s",
           padding: "0 20px",
@@ -270,14 +273,13 @@ const ImageBackground = ({
   prevIndex: number;
   progress: number;
 }) => {
-  const currentImage = imageList[currentIndex % imageList.length];
-  const prevImage =
-    prevIndex >= 0 ? imageList[prevIndex % imageList.length] : null;
+  const currentImage = imageList[currentIndex];
+  const prevImage = prevIndex >= 0 ? imageList[prevIndex] : null;
 
   // 当前图片透明度：淡入
-  const currentOpacity = easeInOutQuad(progress);
+  const currentOpacity = progress;
   // 上一张图片透明度：淡出
-  const prevOpacity = 1 - easeInOutQuad(progress);
+  const prevOpacity = 1 - progress;
 
   return (
     <div
@@ -387,16 +389,23 @@ export const DialogueVideo = () => {
   const speakerConfig = SPEAKERS[speaker];
   const segmentIndex = currentSegment?.index || 0;
 
-  // 计算背景淡入进度
-  const getBgProgress = (index: number) => {
-    const segment = metadata.segments[index];
-    if (!segment) return 0;
-    // 第一张图片直接显示，不做淡入
-    if (index === 0) return 1;
-    const startFrame = segment.start_time * fps;
-    const timeSinceStart = frame - startFrame;
-    return Math.min(Math.max(timeSinceStart / FADE_DURATION, 0), 1);
-  };
+  // 计算背景索引（每{BG_SWITCH_INTERVAL}秒切换一次）
+  const bgIndex = Math.floor(currentTime / BG_SWITCH_INTERVAL);
+  const prevBgIndex = Math.max(bgIndex - 1, -1);
+
+  // 计算当前图片在列表中的索引（取模循环）
+  const currentImageIndex = bgIndex % imageList.length;
+  const prevImageIndex = prevBgIndex >= 0 ? prevBgIndex % imageList.length : -1;
+
+  // 计算背景淡入进度（相对于切换时刻）
+  // 在每次切换时刻，progress 从 0 开始，0.5秒后达到 1
+  const bgSwitchTime = bgIndex * BG_SWITCH_INTERVAL;
+  const timeSinceSwitch = currentTime - bgSwitchTime;
+  const fadeDurationSec = FADE_DURATION / fps; // 0.5秒
+  const bgProgress =
+    bgIndex === 0
+      ? 1
+      : Math.min(Math.max(timeSinceSwitch / fadeDurationSec, 0), 1);
 
   // 计算内容淡入淡出进度
   const getContentOpacity = (index: number) => {
@@ -429,17 +438,15 @@ export const DialogueVideo = () => {
     }
   };
 
-  // 获取上一张图片索引
-  const prevIdx = segmentIndex > 0 ? segmentIndex - 1 : -1;
-  const bgProgress = getBgProgress(segmentIndex);
+  // 内容淡入淡出进度（仍然基于 segment）
   const contentOpacity = getContentOpacity(segmentIndex);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#1a1a2e" }}>
       {/* 背景图片 - 交叉淡入淡出 */}
       <ImageBackground
-        currentIndex={segmentIndex}
-        prevIndex={prevIdx}
+        currentIndex={currentImageIndex}
+        prevIndex={prevImageIndex}
         progress={bgProgress}
       />
 
