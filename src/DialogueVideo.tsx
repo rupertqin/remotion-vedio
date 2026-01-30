@@ -2,6 +2,7 @@ import { AbsoluteFill, useVideoConfig, Audio } from "remotion";
 import { useCurrentFrame } from "remotion";
 import audioFile from "./assets/final_audio.wav";
 import metadata from "./assets/metadata.json";
+import coverImage from "./assets/cover.jpg";
 
 // 加载图片
 const imagesContext = require.context(
@@ -20,7 +21,8 @@ const SPEAKERS: Record<string, { name: string; color: string }> = {
 const FADE_DURATION = 15;
 
 // 缓动函数
-const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const easeInOutQuad = (t: number) =>
+  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
 // 声波组件
 const AudioWaveform = ({ active }: { active: boolean }) => {
@@ -52,7 +54,10 @@ const AudioWaveform = ({ active }: { active: boolean }) => {
 const WaveBar = ({ index }: { index: number }) => {
   const frame = useCurrentFrame();
   const speed = 0.3 + (index % 5) * 0.1;
-  const height = 15 + Math.sin(frame * speed + index * 0.5) * 20 + Math.abs(Math.sin(frame * 0.1 + index * 0.3)) * 12;
+  const height =
+    15 +
+    Math.sin(frame * speed + index * 0.5) * 20 +
+    Math.abs(Math.sin(frame * 0.1 + index * 0.3)) * 12;
 
   return (
     <div
@@ -73,14 +78,15 @@ const imageList = imagesContext.keys().map((key: string) => imagesContext(key));
 const ImageBackground = ({
   currentIndex,
   prevIndex,
-  progress
+  progress,
 }: {
   currentIndex: number;
   prevIndex: number;
   progress: number;
 }) => {
   const currentImage = imageList[currentIndex % imageList.length];
-  const prevImage = prevIndex >= 0 ? imageList[prevIndex % imageList.length] : null;
+  const prevImage =
+    prevIndex >= 0 ? imageList[prevIndex % imageList.length] : null;
 
   // 当前图片透明度：淡入
   const currentOpacity = easeInOutQuad(progress);
@@ -88,7 +94,16 @@ const ImageBackground = ({
   const prevOpacity = 1 - easeInOutQuad(progress);
 
   return (
-    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden" }}>
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: "hidden",
+      }}
+    >
       {/* 上一张图片（淡出） */}
       {prevImage && prevIndex !== currentIndex && (
         <img
@@ -133,9 +148,9 @@ const ImageBackground = ({
 const ContentLayer = ({
   segment,
   speakerConfig,
-  opacity
+  opacity,
 }: {
-  segment: typeof metadata.segments[0] | undefined;
+  segment: (typeof metadata.segments)[0] | undefined;
   speakerConfig: { name: string; color: string };
   opacity: number;
 }) => {
@@ -262,6 +277,29 @@ export const DialogueVideo = () => {
 
       {/* 主音频 */}
       <Audio src={audioFile} volume={1} />
+
+      {/* Cover 图片 - 全屏背景 */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-10px",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+          }}
+        />
+      </div>
 
       {/* 内容层 - 淡入淡出 */}
       <ContentLayer
