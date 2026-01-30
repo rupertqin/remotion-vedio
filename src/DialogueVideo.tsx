@@ -95,11 +95,25 @@ const ScrollingSubtitle = ({
   startTime: number;
   color: string;
 }) => {
+  const { width, height } = useVideoConfig();
   const frame = useCurrentFrame();
   const lines = splitTextByPunctuation(text);
   const lineCount = lines.length;
 
   if (lineCount === 0) return null;
+
+  // 响应式字体大小（以 720p 竖屏 1280 为基准）
+  // 横屏用高度计算，竖屏用宽度计算
+  const isLandscape = width > height;
+  const referenceSize = isLandscape ? 720 : 720;
+  const currentSize = isLandscape ? height : width;
+  const baseFontSize = 36;
+  const fontSize = Math.round(baseFontSize * (currentSize / referenceSize));
+
+  // 横屏时字幕更贴近底部
+  const bottomPosition = isLandscape ? "10%" : "20%";
+  // 横屏时字幕容器留出左右边距
+  const horizontalPadding = isLandscape ? 0 : 50;
 
   // 计算每行时间（根据字数分配，最少1秒）
   const charsPerLine = lines.map((line) => line.length);
@@ -162,10 +176,11 @@ const ScrollingSubtitle = ({
     <div
       style={{
         position: "absolute",
-        bottom: "20%",
+        bottom: bottomPosition,
         left: "50%",
         transform: "translateX(-50%)",
-        width: "100%",
+        width: `calc(100% - ${horizontalPadding * 2}px)`,
+        padding: `0 ${horizontalPadding}px`,
         height: 60,
         display: "flex",
         justifyContent: "center",
@@ -176,7 +191,7 @@ const ScrollingSubtitle = ({
       <div
         style={{
           position: "absolute",
-          fontSize: 36,
+          fontSize,
           color: color,
           textAlign: "center",
           lineHeight: 1.5,
@@ -195,7 +210,7 @@ const ScrollingSubtitle = ({
         <div
           style={{
             position: "absolute",
-            fontSize: 36,
+            fontSize,
             color: color,
             textAlign: "center",
             lineHeight: 1.5,
@@ -223,7 +238,7 @@ const AudioWaveform = ({ active }: { active: boolean }) => {
     <div
       style={{
         position: "absolute",
-        top: 80,
+        top: 100,
         left: "50%",
         transform: "translateX(-50%)",
         display: "flex",
