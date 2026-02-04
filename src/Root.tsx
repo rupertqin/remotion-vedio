@@ -1,7 +1,6 @@
 import "./index.css";
 import { Composition } from "remotion";
 import { MyComposition } from "./Composition";
-import { DialogueVideo } from "./DialogueVideo";
 import metadata from "./assets/metadata.json";
 
 const FPS = 30;
@@ -28,14 +27,6 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="MyComp"
         component={MyComposition}
-        durationInFrames={180} // 6秒预览
-        fps={FPS}
-        width={VIDEO_WIDTH}
-        height={VIDEO_HEIGHT}
-      />
-      <Composition
-        id="DialogueVideo"
-        component={DialogueVideo}
         durationInFrames={AUDIO_DURATION}
         fps={FPS}
         width={VIDEO_WIDTH}
