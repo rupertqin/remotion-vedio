@@ -8,8 +8,8 @@ src/
 │   ├── images/          # 图片素材
 │   │   └── *.jpg/png/webp
 │   ├── audio/           # 音频素材
-│   │   └── *.wav/mp3
-│   ├── final_audio.wav  # 视频主音频
+│   │   ├── final_audio.wav  # 视频主音频
+│   │   └── metadata.json    # 字幕元数据
 │   └── cover.jpg        # 封面图片（可选）
 ├── components/          # 公共组件
 │   ├── ContentLayer.tsx    # 内容层（字幕+声波）
@@ -73,6 +73,9 @@ npm i
 
 # 启动预览
 npm run dev
+
+# 从 F5-TTS 复制音频到项目
+npm run cp-audio
 
 # 渲染视频
 npx remotion render src/index.tsx CarouselVideo output.mp4

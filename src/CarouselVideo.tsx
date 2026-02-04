@@ -1,6 +1,6 @@
 import { AbsoluteFill, useVideoConfig, Audio, useCurrentFrame } from "remotion";
-import metadata from "./assets/metadata.json";
-import audioFile from "./assets/final_audio.wav";
+import metadata from "./assets/audio/metadata.json";
+import audioFile from "./assets/audio/final_audio.wav";
 import { ImageBackground } from "./components/ImageBackground";
 import { easeInOutQuad } from "./utils/ease";
 import imageList from "./utils/images";

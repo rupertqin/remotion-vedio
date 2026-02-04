@@ -2,7 +2,7 @@ import "./index.css";
 import { Composition } from "remotion";
 import { CarouselVideo } from "./CarouselVideo";
 import { CoverVideo } from "./CoverVideo";
-import metadata from "./assets/metadata.json";
+import metadata from "./assets/audio/metadata.json";
 import { VIDEO_CONFIG } from "./config";
 
 const FPS = 30;
