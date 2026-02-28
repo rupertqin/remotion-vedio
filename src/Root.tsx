@@ -14,6 +14,7 @@ const AUDIO_DURATION = Math.ceil(metadata.total_duration * FPS);
 // FULL_HD_1080P: { width: 1920, height: 1080 },
 
 export const RemotionRoot: React.FC = () => {
+  const VIDEO_TYPE = "FULL_HD_1080P";
   return (
     <>
       <Composition
@@ -21,16 +22,16 @@ export const RemotionRoot: React.FC = () => {
         component={CarouselVideo}
         durationInFrames={AUDIO_DURATION}
         fps={FPS}
-        width={VIDEO_CONFIG.PORTRAIT_720P.width}
-        height={VIDEO_CONFIG.PORTRAIT_720P.height}
+        width={VIDEO_CONFIG[VIDEO_TYPE].width}
+        height={VIDEO_CONFIG[VIDEO_TYPE].height}
       />
       <Composition
         id="CoverVideo"
         component={CoverVideo}
         durationInFrames={AUDIO_DURATION}
         fps={FPS}
-        width={VIDEO_CONFIG.HD_720P.width}
-        height={VIDEO_CONFIG.HD_720P.height}
+        width={VIDEO_CONFIG[VIDEO_TYPE].width}
+        height={VIDEO_CONFIG[VIDEO_TYPE].height}
       />
     </>
   );

@@ -4,12 +4,14 @@ interface ImageBackgroundProps {
   currentIndex: number;
   prevIndex: number;
   progress: number;
+  isPortrait?: boolean;
 }
 
 export const ImageBackground = ({
   currentIndex,
   prevIndex,
   progress,
+  isPortrait = true,
 }: ImageBackgroundProps) => {
   const currentImage = imageList[currentIndex];
   const prevImage = prevIndex >= 0 ? imageList[prevIndex] : null;
@@ -38,6 +40,7 @@ export const ImageBackground = ({
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            objectPosition: isPortrait ? "center center" : "center 20%",
             opacity: prevOpacity,
           }}
         />
@@ -50,6 +53,7 @@ export const ImageBackground = ({
           width: "100%",
           height: "100%",
           objectFit: "cover",
+          objectPosition: isPortrait ? "center center" : "center 20%",
           opacity: currentOpacity,
         }}
       />

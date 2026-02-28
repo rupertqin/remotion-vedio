@@ -1,4 +1,4 @@
-import { useCurrentFrame } from "remotion";
+import { useCurrentFrame, useVideoConfig } from "remotion";
 
 // 清理行尾标点
 const cleanLine = (line: string) => line.replace(/[。？！，；]$/, "").trim();
@@ -66,15 +66,15 @@ export const ScrollingSubtitle = ({
   isPortrait = true,
 }: ScrollingSubtitleProps) => {
   const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
   const lines = splitTextByPunctuation(text);
   const lineCount = lines.length;
 
   if (lineCount === 0) return null;
 
-  // 响应式字体大小
-  const referenceSize = 720;
-  const baseFontSize = 36;
-  const fontSize = Math.round(baseFontSize);
+  // 响应式字体大小 - 根据视频宽度缩放
+  // 1080P (1920px) 时字体为 54px，720P (1280px) 时字体为 36px
+  const fontSize = Math.round((width / 1920) * 54);
 
   // 横屏时字幕更贴近底部
   const bottomPosition = isPortrait ? "20%" : "10%";
