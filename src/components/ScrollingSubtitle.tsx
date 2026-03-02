@@ -72,9 +72,10 @@ export const ScrollingSubtitle = ({
 
   if (lineCount === 0) return null;
 
-  // 响应式字体大小 - 根据视频宽度缩放
-  // 1080P (1920px) 时字体为 54px，720P (1280px) 时字体为 36px
-  const fontSize = Math.round((width / 1920) * 54);
+  // 响应式字体大小 - 根据视频最大边缩放（同时适配横屏和竖屏）
+  // HD_720P / PORTRAIT_720P: 48px, FULL_HD_1080P / PORTRAIT_1080P: 72px
+  const maxDimension = Math.max(width, height);
+  const fontSize = Math.round((maxDimension / 1280) * 48);
 
   // 横屏时字幕更贴近底部
   const bottomPosition = isPortrait ? "20%" : "10%";

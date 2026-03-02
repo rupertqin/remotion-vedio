@@ -6,7 +6,6 @@ interface Segment {
   text: string;
   duration: number;
   start_time: number;
-  voice: string;
 }
 
 interface ContentLayerProps {

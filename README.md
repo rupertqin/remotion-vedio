@@ -52,15 +52,15 @@ export const VIDEO_CONFIG = {
   PORTRAIT_720P: { width: 720, height: 1280 },
   PORTRAIT_1080P: { width: 1080, height: 1920 },
   HD_720P: { width: 1280, height: 720 },
-  FULL_HD_1080P: { width: 1920, height: 1080 },
+  HD_1080P: { width: 1920, height: 1080 },
 };
 ```
 
 在 `src/Root.tsx` 中为各组件配置不同尺寸：
 
 ```typescript
-const CAROUSEL_CONFIG = VIDEO_CONFIG.HD_720P;      // 轮播组件尺寸
-const COVER_CONFIG = VIDEO_CONFIG.PORTRAIT_720P;   // 封面组件尺寸
+const CAROUSEL_CONFIG = VIDEO_CONFIG.HD_720P; // 轮播组件尺寸
+const COVER_CONFIG = VIDEO_CONFIG.PORTRAIT_720P; // 封面组件尺寸
 ```
 
 组件内部通过 `useVideoConfig()` 自动获取实际尺寸，并自动计算横竖屏适配。
